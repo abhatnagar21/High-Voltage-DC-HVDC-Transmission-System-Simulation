@@ -1,4 +1,5 @@
-![image](https://github.com/user-attachments/assets/cce28687-1c0c-4e0e-8f7f-310208e80720)
+![image](https://github.com/user-attachments/assets/28c0890f-14f1-4c4b-9e4c-dfbfafe42f3c)
+
 ![image](https://github.com/user-attachments/assets/06004832-4e26-465a-98bf-bcc3f90022de)
 High Voltage DC (HVDC) Transmission System Simulation - README
 
