@@ -1,78 +1,87 @@
-<!-- Generator Protection Simulation Website -->
+<!-- HVDC Transmission System Simulation Website -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generator Protection Simulation</title>
+    <title>HVDC Transmission System Simulation</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-blue-100 text-gray-900">
+<body class="bg-gray-100 text-gray-900">
     <div class="container mx-auto p-6">
-        <h1 class="text-3xl font-bold mb-4 text-blue-700">Generator Protection Simulation</h1>
+        <h1 class="text-3xl font-bold mb-4 text-green-700">HVDC Transmission System Simulation</h1>
 
-        <div class="bg-blue-50 p-4 rounded shadow mb-6">
-            <h2 class="text-xl font-bold mb-2 text-blue-700">Enter System Parameters</h2>
+        <div class="bg-white p-4 rounded shadow mb-6">
+            <h2 class="text-xl font-bold mb-2">Enter System Parameters</h2>
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label>Generator Voltage (V):</label>
-                    <input type="number" id="V_gen" class="border p-2 w-full" value="11000">
+                    <label>AC Voltage (V):</label>
+                    <input type="number" id="V_ac" class="border p-2 w-full" value="230">
                 </div>
                 <div>
-                    <label>Generator Current (A):</label>
-                    <input type="number" id="I_gen" class="border p-2 w-full" value="500">
+                    <label>AC Current (A):</label>
+                    <input type="number" id="I_ac" class="border p-2 w-full" value="50">
                 </div>
                 <div>
-                    <label>Fault Resistance (Ohms):</label>
-                    <input type="number" id="R_fault" class="border p-2 w-full" value="0.01">
+                    <label>Load Resistance (Ohms):</label>
+                    <input type="number" id="R_load" class="border p-2 w-full" value="10">
                 </div>
             </div>
-            <button onclick="simulateProtection()" class="bg-blue-700 text-white px-4 py-2 rounded mt-4 hover:bg-blue-800 transition">Simulate</button>
+            <button onclick="simulateHVDC()" class="bg-green-700 text-white px-4 py-2 rounded mt-4">Simulate</button>
         </div>
 
-        <div class="bg-blue-50 p-4 rounded shadow mb-6">
-            <h2 class="text-xl font-bold mb-2 text-blue-700">Event Log</h2>
+        <div class="bg-white p-4 rounded shadow mb-6">
+            <h2 class="text-xl font-bold mb-2">Event Log</h2>
             <pre id="eventLog" class="overflow-y-auto max-h-60 bg-gray-200 p-2 rounded"></pre>
         </div>
 
-        <div class="bg-blue-50 p-4 rounded shadow">
-            <h2 class="text-xl font-bold mb-2 text-blue-700">Graphical Representation</h2>
+        <div class="bg-white p-4 rounded shadow">
+            <h2 class="text-xl font-bold mb-2">Graphical Representation</h2>
             <canvas id="powerChart"></canvas>
         </div>
     </div>
 
     <script>
-        function simulateProtection() {
-            const V_gen = parseFloat(document.getElementById('V_gen').value);
-            const I_gen = parseFloat(document.getElementById('I_gen').value);
-            const R_fault = parseFloat(document.getElementById('R_fault').value);
+        function simulateHVDC() {
+            const V_ac = parseFloat(document.getElementById('V_ac').value);
+            const I_ac = parseFloat(document.getElementById('I_ac').value);
+            const R_load = parseFloat(document.getElementById('R_load').value);
 
-            const P_gen = V_gen * I_gen;
-            const Fault_Current = V_gen / R_fault;
-            const Overcurrent_Threshold = 1.2 * I_gen;
-            const IsFault = Fault_Current > Overcurrent_Threshold;
+            const converterEfficiency = 0.95;
+            const transmissionLossFactor = 0.02;
+
+            const P_ac = V_ac * I_ac;
+            const P_dc = P_ac * converterEfficiency;
+            const V_dc = Math.sqrt(2) * V_ac;
+            const I_dc = P_dc / V_dc;
+
+            const transmissionLoss = P_dc * transmissionLossFactor;
+            const P_transmitted = P_dc - transmissionLoss;
+            const P_ac_out = P_transmitted * converterEfficiency;
 
             const eventLog = document.getElementById('eventLog');
-            eventLog.innerText = `Generator Power: ${P_gen.toFixed(2)} W\n` +
-                                 `Fault Current: ${Fault_Current.toFixed(2)} A\n` +
-                                 `Overcurrent Threshold: ${Overcurrent_Threshold.toFixed(2)} A\n` +
-                                 `Protection Status: ${IsFault ? 'Fault Detected - Tripping Generator' : 'System Normal'}`;
+            eventLog.innerText = `Input AC Power: ${P_ac.toFixed(2)} W\n` +
+                                 `Rectified DC Power: ${P_dc.toFixed(2)} W\n` +
+                                 `Transmitted DC Power: ${P_transmitted.toFixed(2)} W\n` +
+                                 `Output AC Power: ${P_ac_out.toFixed(2)} W\n` +
+                                 `Transmission Loss: ${transmissionLoss.toFixed(2)} W\n` +
+                                 `System Efficiency: ${(P_ac_out / P_ac * 100).toFixed(2)} %`;
 
-            drawChart(P_gen, Fault_Current);
+            drawChart(P_ac, P_dc, P_transmitted, P_ac_out);
         }
 
-        function drawChart(P_gen, Fault_Current) {
+        function drawChart(P_ac, P_dc, P_transmitted, P_ac_out) {
             const ctx = document.getElementById('powerChart').getContext('2d');
 
             new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: ['Generator Power', 'Fault Current'],
+                    labels: ['AC Input', 'DC Power', 'Transmitted Power', 'AC Output'],
                     datasets: [{
-                        label: 'Values',
-                        data: [P_gen, Fault_Current],
-                        backgroundColor: ['#60A5FA', '#F87171']
+                        label: 'Power (W)',
+                        data: [P_ac, P_dc, P_transmitted, P_ac_out],
+                        backgroundColor: ['#34D399', '#60A5FA', '#FBBF24', '#F87171']
                     }]
                 },
                 options: {
